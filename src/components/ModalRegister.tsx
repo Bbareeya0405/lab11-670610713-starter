@@ -1,83 +1,115 @@
 import { useState } from "react";
+
 export default function ModalRegister() {
   const [fname, setFname] = useState("");
   const [fnameError, setFnameError] = useState(false);
+
   const [lname, setLname] = useState("");
+  const [lnameError, setLnameError] = useState(false);
+
+  const [plan, setPlan] = useState("");
+  const [planError, setPlanError] = useState(false);
+
+  const [gender, setGender] = useState("");
+  const [genderError, setGenderError] = useState(false);
+
   const [buyBottle, setBuyBottle] = useState(false);
   const [buyShoes, setBuyShoes] = useState(false);
   const [buyCap, setBuyCap] = useState(false);
-  // add more state variables:
-  const [plan, setPlan] = useState("");
-  const [gender, setGender] = useState("");
+
+  const [agree, setAgree] = useState(false);
+
   // ----------------------------------------------------------------
-  const inputFnameOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const inputFnameOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFname(e.target.value);
     setFnameError(false);
-    setFname(event.target.value);
   };
 
-  const inputLnameOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLname(event.target.value);
+  const inputLnameOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLname(e.target.value);
+    setLnameError(false);
   };
 
-  const selectPlanOnChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setPlan(event.target.value);
+  const selectPlanOnChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPlan(e.target.value);
+    setPlanError(false);
   };
 
-  const radioGenderMaleOnChange = () => {
-    setGender("male");
+  const radioGenderOnChange = (value: string) => {
+    setGender(value);
+    setGenderError(false);
   };
 
-  const radioGenderFemaleOnChange = () => {
-    setGender("female");
+  const cbBuyBottleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBuyBottle(e.target.checked);
+  };
+  const cbBuyShoesOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBuyShoes(e.target.checked);
+  };
+  const cbBuyCapOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBuyCap(e.target.checked);
   };
 
-  const cbBuyBottleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setBuyBottle(event.target.checked);
-  };
-
-  const cbBuyShoesOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setBuyShoes(event.target.checked);
-  };
-
-  const cbBuyCapOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setBuyCap(event.target.checked);
+  const cbAgreeOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAgree(e.target.checked);
   };
 
   // ----------------------------------------------------------------
-
   const computeTotalPayment = () => {
     let total = 0;
+    let extraTotal = 0;
+
     if (plan === "funrun") total += 500;
     if (plan === "mini") total += 800;
     if (plan === "half") total += 1200;
     if (plan === "full") total += 1500;
-    if (buyBottle) total += 200;
-    if (buyShoes) total += 600;
-    if (buyCap) total += 400;
 
-    return total;
+    if (buyBottle) extraTotal += 200;
+    if (buyShoes) extraTotal += 600;
+    if (buyCap) extraTotal += 400;
+
+    // ถ้าซื้อครบ 3 ชิ้น ลด 20% ของ Extra Items
+    if (buyBottle && buyShoes && buyCap) {
+      extraTotal = extraTotal * 0.8;
+    }
+
+    return total + extraTotal;
   };
 
+  const isDiscounted = buyBottle && buyShoes && buyCap;
+
   // ----------------------------------------------------------------
-
   const registerBtnOnClick = () => {
-    let fnameOk = true;
-    if (fname === "") {
-      fnameOk = false;
+    let valid = true;
+
+    if (fname.trim() === "") {
       setFnameError(true);
+      valid = false;
+    }
+    if (lname.trim() === "") {
+      setLnameError(true);
+      valid = false;
+    }
+    if (plan === "") {
+      setPlanError(true);
+      valid = false;
+    }
+    if (gender === "") {
+      setGenderError(true);
+      valid = false;
     }
 
-    if (fnameOk) {
-      alert(
-        `Registration complete. Please pay money for ${computeTotalPayment().toLocaleString()} THB.`
-      );
-    }
+    if (!valid) return;
+
+    alert(
+      `Registration complete. Please pay money for ${computeTotalPayment().toLocaleString()} THB.`
+    );
   };
 
   return (
     <div
       className="modal fade"
-      id="modalregister" //id="modalregister": ตัวระบุของ modal (ใช้กับ data-bs-target หน้า HomePage)
+      id="modalregister"
       data-bs-backdrop="static"
       data-bs-keyboard="false"
       tabIndex={-1}
@@ -88,15 +120,10 @@ export default function ModalRegister() {
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Register CMU Marathon 🏃‍♂️</h5>
-            <button
-              type="button"
-              className="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
+            <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div className="modal-body">
-            {/* First name & Last name */}
+            {/* First & Last name */}
             <div className="d-flex gap-2">
               <div>
                 <label className="form-label">First name</label>
@@ -105,24 +132,28 @@ export default function ModalRegister() {
                   onChange={inputFnameOnChange}
                   value={fname}
                 />
-                <div className="invalid-feedback">Invalid last name</div>
+                {fnameError && (
+                  <div className="invalid-feedback">Invalid first name</div>
+                )}
               </div>
               <div>
                 <label className="form-label">Last name</label>
                 <input
-                  className="form-control"
+                  className={"form-control" + (lnameError ? " is-invalid" : "")}
                   onChange={inputLnameOnChange}
                   value={lname}
                 />
-                <div className="invalid-feedback">Invalid last name</div>
+                {lnameError && (
+                  <div className="invalid-feedback">Invalid last name</div>
+                )}
               </div>
             </div>
 
-            {/* Running Plan */}
+            {/* Plan */}
             <div className="mt-2">
               <label className="form-label">Plan</label>
               <select
-                className="form-select"
+                className={"form-select" + (planError ? " is-invalid" : "")}
                 onChange={selectPlanOnChange}
                 value={plan}
               >
@@ -130,11 +161,11 @@ export default function ModalRegister() {
                 <option value="funrun">Fun run 5.5 Km (500 THB)</option>
                 <option value="mini">Mini Marathon 10 Km (800 THB)</option>
                 <option value="half">Half Marathon 21 Km (1,200 THB)</option>
-                <option value="full">
-                  Full Marathon 42.195 Km (1,500 THB)
-                </option>
+                <option value="full">Full Marathon 42.195 Km (1,500 THB)</option>
               </select>
-              <div className="invalid-feedback">Please select a Plan</div>
+              {planError && (
+                <div className="invalid-feedback">Please select a Plan</div>
+              )}
             </div>
 
             {/* Gender */}
@@ -144,21 +175,21 @@ export default function ModalRegister() {
                 <input
                   className="me-2 form-check-input"
                   type="radio"
-                  onChange={radioGenderMaleOnChange}
+                  onChange={() => radioGenderOnChange("male")}
                   checked={gender === "male"}
                 />
                 Male 👨
                 <input
                   className="mx-2 form-check-input"
                   type="radio"
-                  onChange={radioGenderFemaleOnChange}
+                  onChange={() => radioGenderOnChange("female")}
                   checked={gender === "female"}
                 />
                 Female 👩
-                {/* To show error when user did not select gender, */}
-                {/* We just have to render the div below (Not using is-invalid bootstrap class) */}
-                {/* <div className="text-danger">Please select gender</div> */}
               </div>
+              {genderError && (
+                <div className="text-danger">Please select gender</div>
+              )}
             </div>
 
             {/* Extra Items */}
@@ -171,7 +202,7 @@ export default function ModalRegister() {
                   onChange={cbBuyBottleOnChange}
                   checked={buyBottle}
                 />
-                <label className="form-check-label">Bottle 🍼 (200 THB)</label>
+                Bottle 🍼 (200 THB)
               </div>
               <div>
                 <input
@@ -180,7 +211,7 @@ export default function ModalRegister() {
                   onChange={cbBuyShoesOnChange}
                   checked={buyShoes}
                 />
-                <label className="form-check-label">Shoes 👟 (600 THB)</label>
+                Shoes 👟 (600 THB)
               </div>
               <div>
                 <input
@@ -189,33 +220,40 @@ export default function ModalRegister() {
                   onChange={cbBuyCapOnChange}
                   checked={buyCap}
                 />
-                <label className="form-check-label">Cap 🧢 (400 THB)</label>
+                Cap 🧢 (400 THB)
               </div>
             </div>
 
-            <div className="alert alert-primary mt-3" role="alert">
+            <div className="alert alert-primary mt-3">
               Promotion📢 Buy all items to get 20% Discount
             </div>
 
             {/* Total Payment */}
             <div>
               Total Payment : {computeTotalPayment().toLocaleString()} THB
-              {/* Render below element conditionally when user get 20% discount */}
-              {/* <span className="text-success d-block">(20% Discounted)</span> */}
+              {isDiscounted && (
+                <span className="text-success d-block">(20% Discounted)</span>
+              )}
             </div>
           </div>
-          <div className="modal-footer">
-            {/* Terms and conditions */}
-            <div>
-              <input className="me-2 form-check-input" type="checkbox" />I agree
-              to the terms and conditions
+
+          <div className="modal-footer d-flex fjustify-content-end align-items-center gap-3">
+            <div className="form-check m-0">
+              <input
+                className="me-2 form-check-input me-2"
+                type="checkbox"
+                onChange={cbAgreeOnChange}
+                checked={agree}
+                id="agreeCheck"
+              />
+              <label className="form-check-label" htmlFor="agreeCheck">
+                I agree to the terms and conditions
+              </label>
             </div>
-            {/* Register Button */}
             <button
               className="btn btn-success my-2"
               onClick={registerBtnOnClick}
-              //You can embbed a state like below to disabled the button
-              //disabled={isUserAgreed}
+              disabled={!agree}
             >
               Register
             </button>
